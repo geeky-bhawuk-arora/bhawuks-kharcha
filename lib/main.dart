@@ -1,4 +1,3 @@
-import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -48,24 +47,44 @@ class PocketLedgerApp extends ConsumerWidget {
     return MaterialApp(
       title: 'PocketLedger',
       debugShowCheckedModeBanner: false,
-      theme: FlexThemeData.light(
-        scheme: FlexScheme.deepBlue,
-        textTheme: GoogleFonts.poppinsTextTheme(),
-        useMaterial3: true,
-      ),
-      darkTheme: FlexThemeData.dark(
-        scheme: FlexScheme.deepBlue,
-        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
-        useMaterial3: true,
-        surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
-        blendLevel: 15,
-        subThemesData: const FlexSubThemesData(
-          blendOnLevel: 20,
-          useTextTheme: true,
-          useM2StyleDividerInM3: true,
-          alignedDropdown: true,
-          useInputDecoratorThemeInDialogs: true,
-          defaultRadius: 16.0,
+      // "Bhawuk-Style" High-End Dark Theme
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF000000), // Midnight Black
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFFFFFFFF), // Electric White
+          secondary: Color(0xFF888888), // Soft Slate
+          surface: Color(0xFF0A0A0A), // Deep Charcoal
+          outline: Color(0xFF1F1F1F), // Sharp Thin Borders
+        ),
+        textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
+          displayLarge: GoogleFonts.robotoMono(color: Colors.white),
+          displayMedium: GoogleFonts.robotoMono(color: Colors.white),
+          bodyLarge: GoogleFonts.inter(color: Colors.white),
+          bodyMedium: GoogleFonts.inter(color: const Color(0xFF888888)),
+        ),
+        cardTheme: CardThemeData(
+          color: const Color(0xFF0A0A0A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+            side: const BorderSide(color: Color(0xFF1F1F1F), width: 1),
+          ),
+          elevation: 0,
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF0A0A0A),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF1F1F1F)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFF1F1F1F)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Color(0xFFFFFFFF)),
+          ),
         ),
       ),
       themeMode: ThemeMode.dark,

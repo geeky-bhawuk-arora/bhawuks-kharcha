@@ -1,8 +1,8 @@
-import 'dart:ui';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:pocket_ledger/features/expenses/data/models/expense_model.dart';
 import 'package:pocket_ledger/features/expenses/data/repositories/expense_repository.dart';
 import 'package:pocket_ledger/features/expenses/presentation/widgets/add_expense_sheet.dart';
@@ -17,152 +17,108 @@ class DashboardScreen extends HookConsumerWidget {
     final expensesAsync = ref.watch(expenseStreamProvider);
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          // Background Gradient
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF0F172A), Color(0xFF1E1B4B)],
-              ),
-            ),
+      backgroundColor: const Color(0xFF000000),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF000000),
+        elevation: 0,
+        centerTitle: false,
+        title: Text(
+          'POCKET_LEDGER // CORE',
+          style: GoogleFonts.jetbrainsMono(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
-          // Mesh Gradient decorative circle
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.blueAccent.withOpacity(0.15),
-              ),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-                child: Container(color: Colors.transparent),
-              ),
-            ),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(color: const Color(0xFF1F1F1F), height: 1),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sync_rounded, color: Color(0xFF888888), size: 18),
+            onPressed: () => ref.read(expenseRepositoryProvider).syncOfflineExpenses(),
           ),
-          CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverAppBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                floating: true,
-                centerTitle: false,
-                title: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.blueAccent.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.blueAccent, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'PocketLedger',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                          ),
-                    ),
-                  ],
-                ),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.sync, color: Colors.white70),
-                    onPressed: () => ref.read(expenseRepositoryProvider).syncOfflineExpenses(),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.logout, color: Colors.white70),
-                    onPressed: () => ref.read(authProvider.notifier).signOut(),
-                  ),
-                ],
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 10),
-                      _GlassBalanceCard(expensesAsync.value ?? []),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Insights',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          const Icon(Icons.auto_graph_rounded, color: Colors.blueAccent, size: 20),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _BentoInsightsGrid(expensesAsync.value ?? []),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Transactions',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          GestureDetector(
-                            onTap: () => _showAboutDialog(context),
-                            child: Text(
-                              'About',
-                              style: TextStyle(color: Colors.blueAccent.withOpacity(0.8), fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-              ),
-              expensesAsync.when(
-                data: (expenses) => SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final expense = expenses[index];
-                        return _GlassTransactionItem(
-                          expense: expense,
-                          index: index,
-                        );
-                      },
-                      childCount: expenses.length,
-                    ),
-                  ),
-                ),
-                loading: () => const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
-                ),
-                error: (err, _) => SliverFillRemaining(
-                  child: Center(child: Text('Error: $err', style: const TextStyle(color: Colors.white))),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
+          IconButton(
+            icon: const Icon(Icons.power_settings_new_rounded, color: Color(0xFF888888), size: 18),
+            onPressed: () => ref.read(authProvider.notifier).signOut(),
           ),
         ],
+      ),
+      body: expensesAsync.when(
+        data: (expenses) => CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ArchitectedBalanceCard(expenses),
+                    const SizedBox(height: 32),
+                    _HeaderSection(label: 'SYSTEM_INSIGHTS'),
+                    const SizedBox(height: 16),
+                    _MonochromaticBentoGrid(expenses),
+                    const SizedBox(height: 32),
+                    _HeaderSection(label: 'RECENT_LOGS'),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+            if (expenses.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Text(
+                    '> NO_RECORDS_FOUND',
+                    style: GoogleFonts.jetbrainsMono(color: const Color(0xFF1F1F1F), fontSize: 12),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final expense = expenses[index];
+                      return _ArchitectedTransactionItem(
+                        expense: expense,
+                        index: index,
+                      );
+                    },
+                    childCount: expenses.length,
+                  ),
+                ),
+              ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 64),
+                child: Center(
+                  child: Text(
+                    'MADE WITH ❤️ BY BHAWUK\n[ VERSION 1.0.0 // STABLE ]',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.jetbrainsMono(
+                      fontSize: 9,
+                      color: const Color(0xFF1F1F1F),
+                      letterSpacing: 2,
+                      height: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        loading: () => const _SystemLoader(),
+        error: (err, _) => Center(
+          child: Text(
+            'CRITICAL_SYSTEM_ERROR: $err',
+            style: GoogleFonts.jetbrainsMono(color: Colors.redAccent, fontSize: 12),
+          ),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -173,84 +129,67 @@ class DashboardScreen extends HookConsumerWidget {
             builder: (context) => const AddExpenseSheet(),
           );
         },
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.white,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        child: const Icon(Icons.add, color: Colors.black, size: 24),
       ),
     );
   }
+}
 
-  void _showAboutDialog(BuildContext context) {
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: '',
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, anim1, anim2) {
-        return Center(
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 32),
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E1B4B),
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: Colors.blueAccent.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.favorite, color: Colors.blueAccent),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'PocketLedger',
-                    style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Premium Finance Management',
-                    style: TextStyle(color: Colors.white54, fontSize: 14),
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Made with ❤️ by Bhawuk',
-                    style: TextStyle(
-                      color: Colors.blueAccent,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Back to Finance', style: TextStyle(color: Colors.white70)),
-                  ),
-                ],
-              ),
+class _HeaderSection extends StatelessWidget {
+  final String label;
+  const _HeaderSection({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Text(
+          '[ $label ]',
+          style: GoogleFonts.jetbrainsMono(
+            color: const Color(0xFF888888),
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 2,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(child: Container(height: 1, color: const Color(0xFF0A0A0A))),
+      ],
+    );
+  }
+}
+
+class _SystemLoader extends StatelessWidget {
+  const _SystemLoader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 32,
+            height: 32,
+            child: CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 1,
             ),
           ),
-        );
-      },
-      transitionBuilder: (context, anim1, anim2, child) {
-        return FadeTransition(
-          opacity: anim1,
-          child: ScaleTransition(
-            scale: anim1,
-            child: child,
+          const SizedBox(height: 24),
+          Text(
+            'INITIALIZING_CORE_SYSTEM...',
+            style: GoogleFonts.jetbrainsMono(
+              color: const Color(0xFF1F1F1F),
+              fontSize: 10,
+              letterSpacing: 1,
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
@@ -259,134 +198,139 @@ final expenseStreamProvider = StreamProvider<List<Expense>>((ref) {
   return ref.watch(expenseRepositoryProvider).watchExpenses();
 });
 
-class _GlassBalanceCard extends StatelessWidget {
+class _ArchitectedBalanceCard extends StatelessWidget {
   final List<Expense> expenses;
-  const _GlassBalanceCard(this.expenses);
+  const _ArchitectedBalanceCard(this.expenses);
 
   @override
   Widget build(BuildContext context) {
     final total = expenses.fold(0.0, (sum, e) => sum + e.amount);
+    final indianRupeeFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
 
     return Container(
       width: double.infinity,
-      height: 180,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        gradient: LinearGradient(
-          colors: [
-            Colors.blueAccent.withOpacity(0.4),
-            Colors.purpleAccent.withOpacity(0.2),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.blueAccent.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        color: const Color(0xFF0A0A0A),
+        border: Border.all(color: const Color(0xFF1F1F1F), width: 1),
+        borderRadius: BorderRadius.circular(4),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'TOTAL BALANCE',
-                      style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
-                    ),
-                    Icon(Icons.contactless_outlined, color: Colors.white.withOpacity(0.3)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  NumberFormat.simpleCurrency().format(total),
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -1.5,
-                      ),
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    _StatChip(label: '▲ \$420', color: Colors.greenAccent),
-                    const SizedBox(width: 12),
-                    _StatChip(label: '▼ \$120', color: Colors.redAccent.withOpacity(0.8)),
-                  ],
-                ),
-              ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '> TOTAL_CAPITAL_EXPOSURE',
+            style: GoogleFonts.jetbrainsMono(color: const Color(0xFF888888), fontSize: 9, letterSpacing: 1),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            indianRupeeFormat.format(total),
+            style: GoogleFonts.robotoMono(
+              color: Colors.white,
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -1.5,
             ),
           ),
-        ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              _TerminalTag(label: 'NET_STATUS: STABLE', color: Colors.greenAccent),
+              const SizedBox(width: 12),
+              _TerminalTag(label: 'ENCRYPTION: AES-256', color: const Color(0xFF1F1F1F)),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _StatChip extends StatelessWidget {
+class _TerminalTag extends StatelessWidget {
   final String label;
   final Color color;
-  const _StatChip({required this.label, required this.color});
+  const _TerminalTag({required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2)),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        borderRadius: BorderRadius.circular(2),
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+        style: GoogleFonts.jetbrainsMono(color: color, fontSize: 8, fontWeight: FontWeight.bold),
       ),
     );
   }
 }
 
-class _BentoInsightsGrid extends StatelessWidget {
+class _MonochromaticBentoGrid extends StatelessWidget {
   final List<Expense> expenses;
-  const _BentoInsightsGrid(this.expenses);
+  const _MonochromaticBentoGrid(this.expenses);
 
   @override
   Widget build(BuildContext context) {
-    final totals = <String, double>{};
+    final categoryTotals = <String, double>{};
     for (var e in expenses) {
-      totals[e.category] = (totals[e.category] ?? 0) + e.amount;
+      categoryTotals[e.category] = (categoryTotals[e.category] ?? 0) + e.amount;
     }
-
-    final sections = totals.entries.map((e) {
+    final sortedCategories = categoryTotals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    final pieSections = sortedCategories.take(3).map((e) {
+      final opacity = (1.0 - (sortedCategories.indexOf(e) * 0.3)).clamp(0.2, 1.0);
       return PieChartSectionData(
         value: e.value,
-        color: _getCategoryColor(e.key),
-        radius: 12,
+        color: Colors.white.withOpacity(opacity),
+        radius: 4,
         showTitle: false,
+      );
+    }).toList();
+
+    if (pieSections.isEmpty) {
+      pieSections.add(PieChartSectionData(value: 1, color: const Color(0xFF1F1F1F), radius: 4, showTitle: false));
+    }
+
+    final now = DateTime.now();
+    final last7Days = List.generate(7, (i) => DateTime(now.year, now.month, now.day - (6 - i)));
+    final dailyTotals = <DateTime, double>{};
+    for (var date in last7Days) dailyTotals[date] = 0;
+    
+    for (var e in expenses) {
+      final expenseDate = DateTime(e.date.year, e.date.month, e.date.day);
+      if (dailyTotals.containsKey(expenseDate)) {
+        dailyTotals[expenseDate] = dailyTotals[expenseDate]! + e.amount;
+      }
+    }
+
+    final barGroups = dailyTotals.entries.map((e) {
+      final index = dailyTotals.keys.toList().indexOf(e.key);
+      return BarChartGroupData(
+        x: index,
+        barRods: [
+          BarChartRodData(
+            toY: e.value,
+            color: index == 6 ? Colors.white : const Color(0xFF1F1F1F),
+            width: 6,
+            borderRadius: BorderRadius.circular(1),
+          ),
+        ],
       );
     }).toList();
 
     return Row(
       children: [
         Expanded(
-          flex: 4,
-          child: _BentoItem(
-            title: 'Categories',
+          flex: 1,
+          child: _BentoBox(
+            title: 'SEGMENT_AUTH',
             child: PieChart(
               PieChartData(
-                sections: sections.isEmpty ? [PieChartSectionData(value: 1, color: Colors.white12, radius: 12, showTitle: false)] : sections,
-                centerSpaceRadius: 25,
+                sections: pieSections,
+                centerSpaceRadius: 20,
                 sectionsSpace: 4,
               ),
             ),
@@ -394,19 +338,15 @@ class _BentoInsightsGrid extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          flex: 3,
-          child: _BentoItem(
-            title: 'Weekly',
+          flex: 1,
+          child: _BentoBox(
+            title: 'VOLATILITY_LOG',
             child: BarChart(
               BarChartData(
                 gridData: FlGridData(show: false),
                 titlesData: FlTitlesData(show: false),
                 borderData: FlBorderData(show: false),
-                barGroups: [
-                  BarChartGroupData(x: 0, barRods: [BarChartRodData(toY: 8, color: Colors.white12, width: 4)]),
-                  BarChartGroupData(x: 1, barRods: [BarChartRodData(toY: 14, color: Colors.blueAccent, width: 4)]),
-                  BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 10, color: Colors.white12, width: 4)]),
-                ],
+                barGroups: barGroups,
               ),
             ),
           ),
@@ -414,23 +354,12 @@ class _BentoInsightsGrid extends StatelessWidget {
       ],
     );
   }
-
-  Color _getCategoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'food': return Colors.orange;
-      case 'transport': return Colors.blue;
-      case 'shopping': return Colors.purple;
-      case 'bills': return Colors.red;
-      case 'entertainment': return Colors.green;
-      default: return Colors.grey;
-    }
-  }
 }
 
-class _BentoItem extends StatelessWidget {
+class _BentoBox extends StatelessWidget {
   final String title;
   final Widget child;
-  const _BentoItem({required this.title, required this.child});
+  const _BentoBox({required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -438,49 +367,65 @@ class _BentoItem extends StatelessWidget {
       height: 140,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        color: const Color(0xFF0A0A0A),
+        border: Border.all(color: const Color(0xFF1F1F1F), width: 1),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title.toUpperCase(),
-            style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+            '> $title',
+            style: GoogleFonts.jetbrainsMono(
+              color: const Color(0xFF888888),
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
           ),
           const SizedBox(height: 12),
-          Expanded(child: Center(child: child)),
+          Expanded(child: child),
         ],
       ),
     );
   }
 }
 
-class _GlassTransactionItem extends ConsumerWidget {
+class _ArchitectedTransactionItem extends ConsumerWidget {
   final Expense expense;
   final int index;
-  const _GlassTransactionItem({required this.expense, required this.index});
+  const _ArchitectedTransactionItem({required this.expense, required this.index});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+    final indianRupeeFormat = NumberFormat.currency(locale: 'en_IN', symbol: '₹');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
       child: Dismissible(
         key: Key(expense.remoteId),
         direction: DismissDirection.endToStart,
-        background: Container(
-          decoration: BoxDecoration(
-            color: Colors.redAccent.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          child: const Icon(Icons.delete_outline, color: Colors.redAccent),
-        ),
         onDismissed: (_) {
           ref.read(expenseRepositoryProvider).deleteExpense(index, expense.remoteId);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('> LOG_ENTRY_DELETED: ${expense.remoteId}'),
+              backgroundColor: const Color(0xFF1F1F1F),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
         },
+        background: Container(
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 24),
+          decoration: BoxDecoration(
+            color: Colors.redAccent.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: Colors.redAccent.withOpacity(0.2)),
+          ),
+          child: const Icon(Icons.delete_sweep_rounded, color: Colors.redAccent, size: 20),
+        ),
         child: InkWell(
           onTap: () {
             showModalBottomSheet(
@@ -493,19 +438,16 @@ class _GlassTransactionItem extends ConsumerWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.05)),
+              color: const Color(0xFF0A0A0A),
+              border: Border.all(color: const Color(0xFF1F1F1F), width: 1),
+              borderRadius: BorderRadius.circular(4),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: _getCategoryColor(expense.category).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(_getCategoryIcon(expense.category), size: 20, color: _getCategoryColor(expense.category)),
+                  width: 2,
+                  height: 24,
+                  color: Colors.white.withOpacity(0.2),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -513,13 +455,13 @@ class _GlassTransactionItem extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        expense.place,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                        expense.place.toUpperCase(),
+                        style: GoogleFonts.jetbrainsMono(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        expense.category,
-                        style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12),
+                        expense.category.toUpperCase(),
+                        style: GoogleFonts.jetbrainsMono(color: const Color(0xFF888888), fontSize: 10),
                       ),
                     ],
                   ),
@@ -528,13 +470,13 @@ class _GlassTransactionItem extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      NumberFormat.simpleCurrency().format(expense.amount),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      indianRupeeFormat.format(expense.amount),
+                      style: GoogleFonts.robotoMono(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      DateFormat.MMMd().format(expense.date),
-                      style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 10),
+                      DateFormat('dd.MM.yy').format(expense.date),
+                      style: GoogleFonts.robotoMono(color: const Color(0xFF1F1F1F), fontSize: 9),
                     ),
                   ],
                 ),
@@ -544,27 +486,5 @@ class _GlassTransactionItem extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case 'food': return Icons.restaurant_rounded;
-      case 'transport': return Icons.directions_bus_rounded;
-      case 'shopping': return Icons.shopping_bag_rounded;
-      case 'bills': return Icons.receipt_long_rounded;
-      case 'entertainment': return Icons.movie_rounded;
-      default: return Icons.category_rounded;
-    }
-  }
-
-  Color _getCategoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'food': return Colors.orangeAccent;
-      case 'transport': return Colors.blueAccent;
-      case 'shopping': return Colors.purpleAccent;
-      case 'bills': return Colors.redAccent;
-      case 'entertainment': return Colors.greenAccent;
-      default: return Colors.grey;
-    }
   }
 }
