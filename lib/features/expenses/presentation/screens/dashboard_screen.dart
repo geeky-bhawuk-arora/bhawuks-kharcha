@@ -10,6 +10,7 @@ import 'package:pocket_ledger/features/expenses/presentation/widgets/add_expense
 import 'package:pocket_ledger/features/auth/presentation/auth_notifier.dart';
 import 'package:pocket_ledger/features/settings/presentation/settings_sheet.dart';
 import 'package:pocket_ledger/core/widget_service.dart';
+import 'package:pocket_ledger/features/expenses/presentation/screens/all_transactions_screen.dart';
 
 // ─── Cheeky Copy ─────────────────────────────────────────────────────────────
 
@@ -164,17 +165,31 @@ class DashboardScreen extends HookConsumerWidget {
                   _GlowButton(
                     icon: Icons.sync_rounded,
                     onTap: () async {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Theher ja paaji, data sync ho rha 🔄', style: GoogleFonts.poppins()),
-                          backgroundColor: const Color(0xFF1A1A24),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          duration: const Duration(seconds: 1),
+                      // Show cheeky overlay loader
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (context) => const Scaffold(
+                          backgroundColor: Colors.black54,
+                          body: _CheekyLoader(message: 'Theher ja paaji, data sync ho rha 🔄'),
                         ),
                       );
+
                       await ref.read(expenseRepositoryProvider).nuclearSync();
                       ref.invalidate(expenseStreamProvider);
+                      
+                      if (context.mounted) {
+                        Navigator.pop(context); // Dismiss loader
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Sab sync ho gaya! ✅', style: GoogleFonts.poppins()),
+                            backgroundColor: const Color(0xFF1A1A24),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
                     },
                   ),
                   _GlowButton(
@@ -219,8 +234,30 @@ class DashboardScreen extends HookConsumerWidget {
                       const SizedBox(height: 12),
                       _InsightsRow(monthExpenses: monthExpenses),
                       const SizedBox(height: 24),
-                      // Transactions
-                      _SectionHeader(label: 'Saboot dekh le 📝'),
+                      // Transactions header with See All
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _SectionHeader(label: 'Saboot dekh le 📝'),
+                          if (monthExpenses.length > 5)
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const AllTransactionsScreen()),
+                                );
+                              },
+                              child: Text(
+                                'Vekho Saare ↗️',
+                                style: GoogleFonts.poppins(
+                                  color: const Color(0xFFFF6B35),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                       const SizedBox(height: 12),
                     ],
                   ),
@@ -268,7 +305,7 @@ class DashboardScreen extends HookConsumerWidget {
                           index: fullIndex,
                         );
                       },
-                      childCount: monthExpenses.length,
+                      childCount: monthExpenses.length > 5 ? 5 : monthExpenses.length,
                     ),
                   ),
                 ),
@@ -292,49 +329,41 @@ class DashboardScreen extends HookConsumerWidget {
           ),  // closes RefreshIndicator
           );
         },
-        loading: () => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('💸', style: TextStyle(fontSize: 40)),
-              const SizedBox(height: 20),
-              const SizedBox(
-                width: 32,
-                height: 32,
-                child: CircularProgressIndicator(
-                  color: Color(0xFFFF6B35),
-                  strokeWidth: 2.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Bhawuk de gunaah gin rahe haan...',
-                style: GoogleFonts.poppins(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-        error: (err, _) => Center(
+        loading: () => const _CheekyLoader(message: 'Bhawuk de gunaah gin rahe haan...'),
+        error: (err, stack) => Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('💀', style: TextStyle(fontSize: 48)),
+                const Text('⚠️', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
                 Text(
-                  'Oye, kuch tut gaya!',
-                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                  'Oye! Kuch gadbad ho gayi',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$err',
+                  err.toString(),
+                  style: GoogleFonts.poppins(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    fontSize: 12,
+                  ),
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.3), fontSize: 12),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => ref.invalidate(expenseStreamProvider),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF6B35),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text('Dobara try kar paaji', style: GoogleFonts.poppins(fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
@@ -357,6 +386,72 @@ class DashboardScreen extends HookConsumerWidget {
           'Udaao Paaji 💸',
           style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700),
         ),
+      ),
+    );
+  }
+}
+
+// ─── Cheeky Animated Loader ──────────────────────────────────────────────────
+
+class _CheekyLoader extends StatelessWidget {
+  final String message;
+  const _CheekyLoader({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              // Pulsing glow
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.8, end: 1.2),
+                duration: const Duration(seconds: 1),
+                curve: Curves.easeInOutSine,
+                builder: (context, value, child) {
+                  return Container(
+                    width: 70 * value,
+                    height: 70 * value,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF6B35).withValues(alpha: 0.08 * (1.2 - value + 0.8)),
+                          blurRadius: 20,
+                          spreadRadius: 8,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              // Rotating Ring
+              const SizedBox(
+                width: 60,
+                height: 60,
+                child: CircularProgressIndicator(
+                  color: Color(0xFFFF6B35),
+                  strokeWidth: 2,
+                ),
+              ),
+              // App Logo
+              Image.asset('assets/logo.png', width: 32, height: 32),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Text(
+            message,
+            style: GoogleFonts.poppins(
+              color: Colors.white.withValues(alpha: 0.3),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }
