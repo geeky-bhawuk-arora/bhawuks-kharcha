@@ -21,7 +21,14 @@ class AddExpenseSheet extends HookConsumerWidget {
     final date = useState(isEditing ? expense!.date : DateTime.now());
     final category = useState(isEditing ? expense!.category : 'Food');
 
-    final categories = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Health'];
+    final categories = [
+      {'name': 'Food', 'icon': Icons.restaurant_rounded},
+      {'name': 'Transport', 'icon': Icons.directions_car_rounded},
+      {'name': 'Shopping', 'icon': Icons.shopping_bag_rounded},
+      {'name': 'Bills', 'icon': Icons.receipt_long_rounded},
+      {'name': 'Entertainment', 'icon': Icons.movie_rounded},
+      {'name': 'Health', 'icon': Icons.favorite_rounded},
+    ];
 
     void handleSave() async {
       final amount = double.tryParse(amountController.text);
@@ -46,7 +53,7 @@ class AddExpenseSheet extends HookConsumerWidget {
               notes: notesController.text,
             );
       }
-      
+
       if (context.mounted) Navigator.pop(context);
     }
 
@@ -55,110 +62,154 @@ class AddExpenseSheet extends HookConsumerWidget {
         bottom: MediaQuery.of(context).viewInsets.bottom,
         left: 24,
         right: 24,
-        top: 24,
+        top: 16,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF0A0A0A),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-        border: Border(
-          top: BorderSide(color: Color(0xFF1F1F1F), width: 1),
-          left: BorderSide(color: Color(0xFF1F1F1F), width: 1),
-          right: BorderSide(color: Color(0xFF1F1F1F), width: 1),
-        ),
+        color: Color(0xFF1C1C26),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Drag Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Title
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  isEditing ? 'EXECUTE: EDIT_TRANS' : 'EXECUTE: NEW_TRANS',
-                  style: GoogleFonts.jetbrainsMono(
+                  isEditing ? 'Edit Expense' : 'New Expense',
+                  style: GoogleFonts.inter(
                     color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                IconButton(
-                  onPressed: handleSave,
-                  icon: const Icon(Icons.terminal_rounded, color: Colors.white),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(Icons.close_rounded, color: Colors.white.withOpacity(0.4), size: 18),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             // Amount Input
-            TextField(
-              controller: amountController,
-              autofocus: !isEditing,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: GoogleFonts.robotoMono(
-                color: Colors.white,
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -2,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF121218),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.white.withOpacity(0.06)),
               ),
-              cursorColor: Colors.white,
-              decoration: InputDecoration(
-                hintText: '0.00',
-                hintStyle: GoogleFonts.robotoMono(color: const Color(0xFF1F1F1F)),
-                prefixText: '$ ',
-                prefixStyle: GoogleFonts.robotoMono(color: const Color(0xFF888888), fontSize: 32),
-                border: InputBorder.none,
+              child: TextField(
+                controller: amountController,
+                autofocus: !isEditing,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: 40,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -1,
+                ),
+                cursorColor: const Color(0xFF6C63FF),
+                decoration: InputDecoration(
+                  hintText: '0.00',
+                  hintStyle: GoogleFonts.inter(color: Colors.white.withOpacity(0.08)),
+                  prefixText: '₹ ',
+                  prefixStyle: GoogleFonts.inter(
+                    color: Colors.white.withOpacity(0.3),
+                    fontSize: 28,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  border: InputBorder.none,
+                ),
               ),
             ),
-            const Divider(color: Color(0xFF1F1F1F)),
             const SizedBox(height: 24),
             // Place Input
-            _TerminalInput(
+            _ModernInput(
               controller: placeController,
-              label: 'SOURCE/LOCATION',
-              hint: 'ENTER_DESTINATION',
+              label: 'Where did you spend?',
+              hint: 'e.g. Starbucks, Amazon...',
+              icon: Icons.place_rounded,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            // Category
             Text(
-              '> CLASSIFICATION',
-              style: GoogleFonts.jetbrainsMono(
-                color: const Color(0xFF888888),
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
+              'Category',
+              style: GoogleFonts.inter(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: categories.map((cat) {
-                final isSelected = category.value == cat;
+                final name = cat['name'] as String;
+                final icon = cat['icon'] as IconData;
+                final isSelected = category.value == name;
                 return GestureDetector(
-                  onTap: () => category.value = cat,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  onTap: () => category.value = name,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.white : Colors.transparent,
+                      gradient: isSelected
+                          ? const LinearGradient(
+                              colors: [Color(0xFF6C63FF), Color(0xFF9C8FFF)],
+                            )
+                          : null,
+                      color: isSelected ? null : const Color(0xFF121218),
                       border: Border.all(
-                        color: isSelected ? Colors.white : const Color(0xFF1F1F1F),
+                        color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.06),
                       ),
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      cat.toUpperCase(),
-                      style: GoogleFonts.jetbrainsMono(
-                        color: isSelected ? Colors.black : const Color(0xFF888888),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, size: 14, color: isSelected ? Colors.white : Colors.white.withOpacity(0.3)),
+                        const SizedBox(width: 6),
+                        Text(
+                          name,
+                          style: GoogleFonts.inter(
+                            color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             // Date Picker
             InkWell(
+              borderRadius: BorderRadius.circular(14),
               onTap: () async {
                 final picked = await showDatePicker(
                   context: context,
@@ -169,12 +220,12 @@ class AddExpenseSheet extends HookConsumerWidget {
                     return Theme(
                       data: Theme.of(context).copyWith(
                         colorScheme: const ColorScheme.dark(
-                          primary: Colors.white,
-                          onPrimary: Colors.black,
-                          surface: Color(0xFF0A0A0A),
+                          primary: Color(0xFF6C63FF),
+                          onPrimary: Colors.white,
+                          surface: Color(0xFF1C1C26),
                           onSurface: Colors.white,
                         ),
-                        dialogBackgroundColor: const Color(0xFF0A0A0A),
+                        dialogBackgroundColor: const Color(0xFF1C1C26),
                       ),
                       child: child!,
                     );
@@ -183,53 +234,54 @@ class AddExpenseSheet extends HookConsumerWidget {
                 if (picked != null) date.value = picked;
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF000000),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: const Color(0xFF1F1F1F)),
+                  color: const Color(0xFF121218),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white.withOpacity(0.06)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today_rounded, color: Color(0xFF888888), size: 16),
+                    Icon(Icons.calendar_today_rounded, color: Colors.white.withOpacity(0.3), size: 16),
                     const SizedBox(width: 12),
                     Text(
-                      DateFormat('yyyy.MM.dd').format(date.value),
-                      style: GoogleFonts.robotoMono(color: Colors.white, fontSize: 13),
+                      DateFormat('d MMMM yyyy').format(date.value),
+                      style: GoogleFonts.inter(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                     const Spacer(),
                     Text(
-                      '[ CHANGE ]',
-                      style: GoogleFonts.jetbrainsMono(color: const Color(0xFF1F1F1F), fontSize: 10),
+                      'Change',
+                      style: GoogleFonts.inter(color: const Color(0xFF6C63FF), fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             // Notes Input
-            _TerminalInput(
+            _ModernInput(
               controller: notesController,
-              label: 'METADATA/NOTES',
-              hint: 'ADDITIONAL_RECORDS',
+              label: 'Notes (optional)',
+              hint: 'Any details...',
+              icon: Icons.note_rounded,
               maxLines: 2,
             ),
-            const SizedBox(height: 40),
-            // Action Button
+            const SizedBox(height: 32),
+            // Save Button
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
                 onPressed: handleSave,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  backgroundColor: const Color(0xFF6C63FF),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 0,
                 ),
                 child: Text(
-                  isEditing ? 'UPDATE_ENTRY' : 'COMMIT_ENTRY',
-                  style: GoogleFonts.jetbrainsMono(fontWeight: FontWeight.bold),
+                  isEditing ? 'Update Expense' : 'Save Expense',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
                 ),
               ),
             ),
@@ -241,16 +293,18 @@ class AddExpenseSheet extends HookConsumerWidget {
   }
 }
 
-class _TerminalInput extends StatelessWidget {
+class _ModernInput extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final String hint;
+  final IconData icon;
   final int maxLines;
 
-  const _TerminalInput({
+  const _ModernInput({
     required this.controller,
     required this.label,
     required this.hint,
+    required this.icon,
     this.maxLines = 1,
   });
 
@@ -260,30 +314,31 @@ class _TerminalInput extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '> $label',
-          style: GoogleFonts.jetbrainsMono(
-            color: const Color(0xFF888888),
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+          label,
+          style: GoogleFonts.inter(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF000000),
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: const Color(0xFF1F1F1F)),
+            color: const Color(0xFF121218),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withOpacity(0.06)),
           ),
           child: TextField(
             controller: controller,
             maxLines: maxLines,
-            style: GoogleFonts.jetbrainsMono(color: Colors.white, fontSize: 14),
-            cursorColor: Colors.white,
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+            cursorColor: const Color(0xFF6C63FF),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: GoogleFonts.jetbrainsMono(color: const Color(0xFF1F1F1F)),
+              hintStyle: GoogleFonts.inter(color: Colors.white.withOpacity(0.15)),
+              prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.2), size: 18),
               border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
         ),

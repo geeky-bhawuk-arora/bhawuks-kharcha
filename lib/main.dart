@@ -30,60 +30,62 @@ void main() async {
       overrides: [
         expenseBoxProvider.overrideWithValue(expenseBox),
       ],
-      child: const PocketLedgerApp(),
+      child: const BhawukKharchaApp(),
     ),
   );
 }
 
 final expenseBoxProvider = Provider<Box<Expense>>((ref) => throw UnimplementedError());
 
-class PocketLedgerApp extends ConsumerWidget {
-  const PocketLedgerApp({super.key});
+class BhawukKharchaApp extends ConsumerWidget {
+  const BhawukKharchaApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
 
+    // Cheeky color palette — warm, vibrant, fun
+    const accentOrange = Color(0xFFFF6B35);
+    const accentYellow = Color(0xFFFFD166);
+    const surfaceDark = Color(0xFF0F0F14);
+    const cardDark = Color(0xFF1A1A24);
+
     return MaterialApp(
-      title: 'PocketLedger',
+      title: "Bhawuk's Kharcha",
       debugShowCheckedModeBanner: false,
-      // "Bhawuk-Style" High-End Dark Theme
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF000000), // Midnight Black
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFFFFFFF), // Electric White
-          secondary: Color(0xFF888888), // Soft Slate
-          surface: Color(0xFF0A0A0A), // Deep Charcoal
-          outline: Color(0xFF1F1F1F), // Sharp Thin Borders
+      theme: ThemeData.dark(useMaterial3: true).copyWith(
+        scaffoldBackgroundColor: surfaceDark,
+        colorScheme: ColorScheme.dark(
+          primary: accentOrange,
+          secondary: accentYellow,
+          surface: cardDark,
+          onSurface: Colors.white,
+          outline: Colors.white.withValues(alpha: 0.06),
+          tertiary: const Color(0xFF4ADE80),
+          error: const Color(0xFFFF6B6B),
         ),
-        textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
-          displayLarge: GoogleFonts.robotoMono(color: Colors.white),
-          displayMedium: GoogleFonts.robotoMono(color: Colors.white),
-          bodyLarge: GoogleFonts.inter(color: Colors.white),
-          bodyMedium: GoogleFonts.inter(color: const Color(0xFF888888)),
-        ),
+        textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
         cardTheme: CardThemeData(
-          color: const Color(0xFF0A0A0A),
+          color: cardDark,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: const BorderSide(color: Color(0xFF1F1F1F), width: 1),
+            borderRadius: BorderRadius.circular(20),
           ),
           elevation: 0,
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFF0A0A0A),
+          fillColor: cardDark,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF1F1F1F)),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFF1F1F1F)),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Color(0xFFFFFFFF)),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: accentOrange, width: 1.5),
           ),
         ),
       ),

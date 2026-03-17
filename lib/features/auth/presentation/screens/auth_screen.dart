@@ -14,72 +14,104 @@ class AuthScreen extends HookConsumerWidget {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF000000),
+      backgroundColor: const Color(0xFF121218),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 40.0),
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Sharp Technical Logo
+              // Logo
               Container(
-                width: 48,
-                height: 48,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFFFFFFF), width: 1.5),
-                  borderRadius: BorderRadius.circular(4),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFF9C8FFF)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(Icons.terminal_rounded, color: Colors.white, size: 24),
+                child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 28),
               ),
               const SizedBox(height: 32),
               Text(
-                'POCKET_LEDGER.EXE',
-                style: GoogleFonts.jetbrainsMono(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+                'Welcome Back',
+                style: GoogleFonts.inter(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
                   color: Colors.white,
-                  letterSpacing: -1,
+                  letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'SYSTEM_AUTH_REQUIRED',
-                style: GoogleFonts.jetbrainsMono(
-                  fontSize: 12,
-                  color: const Color(0xFF888888),
-                  letterSpacing: 1,
+                'Sign in to track your expenses',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.4),
                 ),
               ),
-              const SizedBox(height: 48),
-              _TerminalField(
+              const SizedBox(height: 40),
+              // Email
+              _AuthField(
                 controller: emailController,
-                label: 'USER_ID',
-                hint: 'ENTER_EMAIL',
+                label: 'Email',
+                hint: 'you@example.com',
+                icon: Icons.email_rounded,
               ),
-              const SizedBox(height: 24),
-              _TerminalField(
+              const SizedBox(height: 16),
+              // Password
+              _AuthField(
                 controller: passwordController,
-                label: 'ACCESS_KEY',
-                hint: '********',
+                label: 'Password',
+                hint: '••••••••',
+                icon: Icons.lock_rounded,
                 isPassword: true,
               ),
-              const SizedBox(height: 40),
+              if (authState.error != null) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF6B6B).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFF6B6B).withOpacity(0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline_rounded, color: Color(0xFFFF6B6B), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          authState.error!,
+                          style: GoogleFonts.inter(color: const Color(0xFFFF6B6B), fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 32),
+              // Sign In Button
               SizedBox(
                 width: double.infinity,
                 height: 52,
-                child: OutlinedButton(
+                child: ElevatedButton(
                   onPressed: authState.isLoading
                       ? null
                       : () => ref.read(authProvider.notifier).signIn(
                             emailController.text.trim(),
                             passwordController.text.trim(),
                           ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.white, width: 1),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6C63FF),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: const Color(0xFF6C63FF).withOpacity(0.5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
                   ),
                   child: authState.isLoading
                       ? const SizedBox(
@@ -87,23 +119,22 @@ class AuthScreen extends HookConsumerWidget {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         )
                       : Text(
-                          'EXECUTE_LOGIN',
-                          style: GoogleFonts.jetbrainsMono(fontWeight: FontWeight.bold),
+                          'Sign In',
+                          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
                         ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 32),
               Center(
                 child: Text(
-                  'MADE WITH ❤️ BY BHAWUK',
-                  style: GoogleFonts.jetbrainsMono(
-                    fontSize: 10,
-                    color: const Color(0xFF1F1F1F),
-                    letterSpacing: 2,
+                  'Made with ❤️ by Bhawuk',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: Colors.white.withOpacity(0.1),
                   ),
                 ),
               ),
@@ -115,16 +146,18 @@ class AuthScreen extends HookConsumerWidget {
   }
 }
 
-class _TerminalField extends StatelessWidget {
+class _AuthField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final String hint;
+  final IconData icon;
   final bool isPassword;
 
-  const _TerminalField({
+  const _AuthField({
     required this.controller,
     required this.label,
     required this.hint,
+    required this.icon,
     this.isPassword = false,
   });
 
@@ -134,32 +167,33 @@ class _TerminalField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '> $label',
-          style: GoogleFonts.jetbrainsMono(
-            color: const Color(0xFF888888),
-            fontSize: 11,
-            fontWeight: FontWeight.bold,
+          label,
+          style: GoogleFonts.inter(
+            color: Colors.white.withOpacity(0.5),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           obscureText: isPassword,
-          style: GoogleFonts.jetbrainsMono(color: Colors.white, fontSize: 14),
-          cursorColor: Colors.white,
+          style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
+          cursorColor: const Color(0xFF6C63FF),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.jetbrainsMono(color: const Color(0xFF1F1F1F)),
+            hintStyle: GoogleFonts.inter(color: Colors.white.withOpacity(0.15)),
+            prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.2), size: 18),
             filled: true,
-            fillColor: const Color(0xFF0A0A0A),
+            fillColor: const Color(0xFF1C1C26),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: const BorderSide(color: Color(0xFF1F1F1F)),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: Colors.white.withOpacity(0.06)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: const BorderSide(color: Color(0xFFFFFFFF)),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 1.5),
             ),
           ),
         ),

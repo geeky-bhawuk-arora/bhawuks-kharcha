@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:hive/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -20,35 +21,86 @@ class ExpenseRepository {
   Stream<List<Expense>> watchExpenses() async* {
     // 1. Emit local data immediately
     yield getExpenses();
-    
-    // 2. Refresh from Supabase
-    await fetchAllFromSupabase();
+
+    // 2. Full sync from Supabase (reconcile local ↔ remote, remove stale local entries)
+    await fullSyncFromSupabase();
     yield getExpenses();
-    
-    // 3. Keep watching for local changes
-    await for (final _ in _box.watch()) {
-      yield getExpenses();
+
+    // 3. Set up a real-time listener for changes from other devices
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      // Create a StreamController to merge Hive + real-time events
+      final controller = StreamController<List<Expense>>();
+      
+      // Listen to Supabase real-time changes
+      final channel = _supabase.channel('expenses_realtime')
+        .onPostgresChanges(
+          event: sb.PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'expenses',
+          filter: sb.PostgresChangeFilter(
+            type: sb.PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: user.id,
+          ),
+          callback: (payload) async {
+            // On any remote change, do a full re-sync
+            await fullSyncFromSupabase();
+            if (!controller.isClosed) {
+              controller.add(getExpenses());
+            }
+          },
+        )
+        .subscribe();
+
+      // Also listen to local Hive changes
+      final hiveSubscription = _box.watch().listen((_) {
+        if (!controller.isClosed) {
+          controller.add(getExpenses());
+        }
+      });
+
+      yield* controller.stream;
+
+      // Cleanup
+      hiveSubscription.cancel();
+      controller.close();
+      _supabase.removeChannel(channel);
+    } else {
+      // Fallback: just watch Hive if no user
+      await for (final _ in _box.watch()) {
+        yield getExpenses();
+      }
     }
   }
 
-  Future<void> fetchAllFromSupabase() async {
+  /// Full reconciliation: pull all remote records, update local, and remove
+  /// any local entries that no longer exist on the server (deleted from another device).
+  Future<void> fullSyncFromSupabase() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
     try {
+      // 1. Push unsynced local entries first
+      await syncOfflineExpenses();
+
+      // 2. Fetch all remote records
       final List<dynamic> data = await _supabase
           .from('expenses')
           .select()
           .eq('user_id', user.id);
 
-      // Create a set of remote IDs for quick lookup
-      final remoteIds = data.map((item) => item['id'] as String).toSet();
-      
-      // Update/Add remote records
+      // Build a set of remote IDs
+      final remoteIds = <String>{};
       for (var item in data) {
-        final remoteId = item['id'];
+        remoteIds.add(item['id'] as String);
+      }
+
+      // 3. Update or insert remote records into Hive
+      for (var item in data) {
+        final remoteId = item['id'] as String;
         final existingIndex = _box.values.toList().indexWhere((e) => e.remoteId == remoteId);
-        
+
         final expense = Expense(
           remoteId: remoteId,
           amount: (item['amount'] as num).toDouble(),
@@ -64,6 +116,18 @@ class ExpenseRepository {
           await _box.putAt(existingIndex, expense);
         } else {
           await _box.add(expense);
+        }
+      }
+
+      // 4. Remove local entries that don't exist on the server anymore
+      //    This is the KEY fix for multi-device sync!
+      final localEntries = _box.values.toList();
+      for (int i = localEntries.length - 1; i >= 0; i--) {
+        final localEntry = localEntries[i];
+        // Only remove synced entries that are missing from remote
+        // Keep unsynced entries (they haven't been pushed yet)
+        if (localEntry.synced && !remoteIds.contains(localEntry.remoteId)) {
+          await _box.deleteAt(i);
         }
       }
     } catch (e) {
@@ -110,10 +174,12 @@ class ExpenseRepository {
         'date': date.toIso8601String(),
         'notes': notes,
       });
-      
+
       expense.synced = true;
       await expense.save();
-    } catch (e) {}
+    } catch (e) {
+      // Will be synced later via syncOfflineExpenses
+    }
   }
 
   Future<void> updateExpense({
@@ -145,7 +211,7 @@ class ExpenseRepository {
         'date': date.toIso8601String(),
         'notes': notes,
       }).match({'id': remoteId});
-      
+
       expense.synced = true;
       await expense.save();
     } catch (e) {}
