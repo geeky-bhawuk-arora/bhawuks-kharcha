@@ -14,18 +14,18 @@ CREATE TABLE IF NOT EXISTS public.expenses (
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 
 -- Create policies
-CREATE POLICY "Users can create their own expenses." 
-ON public.expenses FOR INSERT 
+CREATE POLICY "Users can create their own expenses."
+ON public.expenses FOR INSERT
 WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own expenses." 
-ON public.expenses FOR SELECT 
+CREATE POLICY "Users can view their own expenses."
+ON public.expenses FOR SELECT
 USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own expenses." 
-ON public.expenses FOR UPDATE 
+CREATE POLICY "Users can update their own expenses."
+ON public.expenses FOR UPDATE
 USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own expenses." 
-ON public.expenses FOR DELETE 
+CREATE POLICY "Users can delete their own expenses."
+ON public.expenses FOR DELETE
 USING (auth.uid() = user_id);
