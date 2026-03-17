@@ -22,12 +22,12 @@ class AddExpenseSheet extends HookConsumerWidget {
     final category = useState(isEditing ? expense!.category : 'Food');
 
     final categories = [
-      {'name': 'Food', 'icon': Icons.restaurant_rounded},
-      {'name': 'Transport', 'icon': Icons.directions_car_rounded},
-      {'name': 'Shopping', 'icon': Icons.shopping_bag_rounded},
-      {'name': 'Bills', 'icon': Icons.receipt_long_rounded},
-      {'name': 'Entertainment', 'icon': Icons.movie_rounded},
-      {'name': 'Health', 'icon': Icons.favorite_rounded},
+      {'name': 'Food', 'emoji': '🍔'},
+      {'name': 'Transport', 'emoji': '🚗'},
+      {'name': 'Shopping', 'emoji': '🛍️'},
+      {'name': 'Bills', 'emoji': '📨'},
+      {'name': 'Entertainment', 'emoji': '🎬'},
+      {'name': 'Health', 'emoji': '💊'},
     ];
 
     void handleSave() async {
@@ -65,8 +65,8 @@ class AddExpenseSheet extends HookConsumerWidget {
         top: 16,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF1C1C26),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        color: Color(0xFF1A1A24),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -79,7 +79,7 @@ class AddExpenseSheet extends HookConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
+                  color: Colors.white.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -89,13 +89,25 @@ class AddExpenseSheet extends HookConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  isEditing ? 'Edit Expense' : 'New Expense',
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isEditing ? 'Edit Karo 📝' : 'Naya Kharcha 💸',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      isEditing ? 'galti sudhaar lo abhi' : 'kitna udaaya aaj?',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
@@ -103,10 +115,10 @@ class AddExpenseSheet extends HookConsumerWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.06),
+                      color: Colors.white.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.close_rounded, color: Colors.white.withOpacity(0.4), size: 18),
+                    child: Icon(Icons.close_rounded, color: Colors.white.withValues(alpha: 0.4), size: 18),
                   ),
                 ),
               ],
@@ -116,27 +128,27 @@ class AddExpenseSheet extends HookConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFF121218),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.06)),
+                color: const Color(0xFF0F0F14),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFFF6B35).withValues(alpha: 0.1)),
               ),
               child: TextField(
                 controller: amountController,
                 autofocus: !isEditing,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: GoogleFonts.inter(
+                style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 40,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -1,
                 ),
-                cursorColor: const Color(0xFF6C63FF),
+                cursorColor: const Color(0xFFFF6B35),
                 decoration: InputDecoration(
                   hintText: '0.00',
-                  hintStyle: GoogleFonts.inter(color: Colors.white.withOpacity(0.08)),
+                  hintStyle: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.08)),
                   prefixText: '₹ ',
-                  prefixStyle: GoogleFonts.inter(
-                    color: Colors.white.withOpacity(0.3),
+                  prefixStyle: GoogleFonts.poppins(
+                    color: Colors.white.withValues(alpha: 0.3),
                     fontSize: 28,
                     fontWeight: FontWeight.w600,
                   ),
@@ -148,16 +160,16 @@ class AddExpenseSheet extends HookConsumerWidget {
             // Place Input
             _ModernInput(
               controller: placeController,
-              label: 'Where did you spend?',
-              hint: 'e.g. Starbucks, Amazon...',
+              label: 'Kithe udaaye? 📍',
+              hint: 'e.g. Sardar ji ka dhaba...',
               icon: Icons.place_rounded,
             ),
             const SizedBox(height: 20),
             // Category
             Text(
-              'Category',
-              style: GoogleFonts.inter(
-                color: Colors.white.withOpacity(0.5),
+              'Kis type da kharcha? 🤔',
+              style: GoogleFonts.poppins(
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -168,7 +180,7 @@ class AddExpenseSheet extends HookConsumerWidget {
               runSpacing: 8,
               children: categories.map((cat) {
                 final name = cat['name'] as String;
-                final icon = cat['icon'] as IconData;
+                final emoji = cat['emoji'] as String;
                 final isSelected = category.value == name;
                 return GestureDetector(
                   onTap: () => category.value = name,
@@ -178,24 +190,24 @@ class AddExpenseSheet extends HookConsumerWidget {
                     decoration: BoxDecoration(
                       gradient: isSelected
                           ? const LinearGradient(
-                              colors: [Color(0xFF6C63FF), Color(0xFF9C8FFF)],
+                              colors: [Color(0xFFFF6B35), Color(0xFFFFD166)],
                             )
                           : null,
-                      color: isSelected ? null : const Color(0xFF121218),
+                      color: isSelected ? null : const Color(0xFF0F0F14),
                       border: Border.all(
-                        color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.06),
+                        color: isSelected ? Colors.transparent : Colors.white.withValues(alpha: 0.06),
                       ),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(icon, size: 14, color: isSelected ? Colors.white : Colors.white.withOpacity(0.3)),
+                        Text(emoji, style: const TextStyle(fontSize: 14)),
                         const SizedBox(width: 6),
                         Text(
                           name,
-                          style: GoogleFonts.inter(
-                            color: isSelected ? Colors.white : Colors.white.withOpacity(0.4),
+                          style: GoogleFonts.poppins(
+                            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.4),
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -220,12 +232,14 @@ class AddExpenseSheet extends HookConsumerWidget {
                     return Theme(
                       data: Theme.of(context).copyWith(
                         colorScheme: const ColorScheme.dark(
-                          primary: Color(0xFF6C63FF),
+                          primary: Color(0xFFFF6B35),
                           onPrimary: Colors.white,
-                          surface: Color(0xFF1C1C26),
+                          surface: Color(0xFF1A1A24),
                           onSurface: Colors.white,
                         ),
-                        dialogBackgroundColor: const Color(0xFF1C1C26),
+                        dialogTheme: const DialogThemeData(
+                          backgroundColor: Color(0xFF1A1A24),
+                        ),
                       ),
                       child: child!,
                     );
@@ -236,22 +250,22 @@ class AddExpenseSheet extends HookConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF121218),
+                  color: const Color(0xFF0F0F14),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white.withOpacity(0.06)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_today_rounded, color: Colors.white.withOpacity(0.3), size: 16),
+                    Icon(Icons.calendar_today_rounded, color: Colors.white.withValues(alpha: 0.3), size: 16),
                     const SizedBox(width: 12),
                     Text(
                       DateFormat('d MMMM yyyy').format(date.value),
-                      style: GoogleFonts.inter(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
                     ),
                     const Spacer(),
                     Text(
-                      'Change',
-                      style: GoogleFonts.inter(color: const Color(0xFF6C63FF), fontSize: 12, fontWeight: FontWeight.w600),
+                      'Badlo',
+                      style: GoogleFonts.poppins(color: const Color(0xFFFF6B35), fontSize: 12, fontWeight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -261,8 +275,8 @@ class AddExpenseSheet extends HookConsumerWidget {
             // Notes Input
             _ModernInput(
               controller: notesController,
-              label: 'Notes (optional)',
-              hint: 'Any details...',
+              label: 'Kuch yaad rakhna hai? 📝',
+              hint: 'notes likh le...',
               icon: Icons.note_rounded,
               maxLines: 2,
             ),
@@ -274,14 +288,14 @@ class AddExpenseSheet extends HookConsumerWidget {
               child: ElevatedButton(
                 onPressed: handleSave,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6C63FF),
+                  backgroundColor: const Color(0xFFFF6B35),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 0,
                 ),
                 child: Text(
-                  isEditing ? 'Update Expense' : 'Save Expense',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
+                  isEditing ? 'Update Kar De ✅' : 'Daal De Paaji 🚀',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 15),
                 ),
               ),
             ),
@@ -315,8 +329,8 @@ class _ModernInput extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            color: Colors.white.withOpacity(0.5),
+          style: GoogleFonts.poppins(
+            color: Colors.white.withValues(alpha: 0.5),
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -324,19 +338,19 @@ class _ModernInput extends StatelessWidget {
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF121218),
+            color: const Color(0xFF0F0F14),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withOpacity(0.06)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
           ),
           child: TextField(
             controller: controller,
             maxLines: maxLines,
-            style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
-            cursorColor: const Color(0xFF6C63FF),
+            style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+            cursorColor: const Color(0xFFFF6B35),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: GoogleFonts.inter(color: Colors.white.withOpacity(0.15)),
-              prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.2), size: 18),
+              hintStyle: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.15)),
+              prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.2), size: 18),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),

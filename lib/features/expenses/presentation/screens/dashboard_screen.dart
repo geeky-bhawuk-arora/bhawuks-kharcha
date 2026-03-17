@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:pocket_ledger/features/expenses/data/models/expense_model.dart';
 import 'package:pocket_ledger/features/expenses/data/repositories/expense_repository.dart';
 import 'package:pocket_ledger/features/expenses/presentation/widgets/add_expense_sheet.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:pocket_ledger/features/auth/presentation/auth_notifier.dart';
 
 // ─── Cheeky Copy ─────────────────────────────────────────────────────────────
@@ -17,44 +16,46 @@ String _getCheekyGreeting() {
   final greetings = <String>[];
   if (hour < 12) {
     greetings.addAll([
-      'Morning, big spender ☕',
-      'Rise & spend 🌅',
-      'Good morning, wallet warrior 💪',
-      'Up early to burn cash? 🔥',
+      'Kiddan paaji, subah subah kharcha? ☕',
+      'Sat Sri Akaal! Aaj ki udaana hai? 🌅',
+      'Savere savere wallet khali? Waah! 💪',
+      'Utth paaji, paise udaane da time ⏰',
     ]);
   } else if (hour < 17) {
     greetings.addAll([
-      'Afternoon damage report 📋',
-      'Lunch break spending spree? 🍕',
-      'How much today, Bhawuk? 🤔',
-      'Your wallet called. It\'s crying 😭',
+      'Lunch time = kharcha time 🍕',
+      'Kiddan? Dopahir da hisaab laga 📋',
+      'Oye Bhawuk, aaj kithe udaaye? 🤔',
+      'Wallet ro rha hai tere peeche 😭',
     ]);
   } else {
     greetings.addAll([
-      'Evening audit time 🌙',
-      'Night owl spending mode 🦉',
-      'Counting the damage? 💸',
-      'Dinner + regret = tonight 🍽️',
+      'Shaam ho gayi, hisaab laga paaji 🌙',
+      'Raat nu soch kitthe gaye paise 🦉',
+      'Dinner kha ke check kar le damage 🍽️',
+      'Bhai, aaj ka kharcha toh dekh le 💸',
     ]);
   }
   return greetings[Random().nextInt(greetings.length)];
 }
 
 String _getBalanceReaction(double total) {
-  if (total == 0) return 'Clean slate. For now... 😏';
-  if (total < 500) return 'Barely a scratch 😎';
-  if (total < 2000) return 'Moderate damage 🤷';
-  if (total < 5000) return 'Wallet is sweating 😰';
-  if (total < 10000) return 'RIP savings 💀';
-  return 'FINANCIAL APOCALYPSE 🔥';
+  if (total == 0) return 'Changa hai, koi kharcha nahi 😏';
+  if (total < 500) return 'Chill hai bro 😎';
+  if (total < 2000) return 'Thoda bahut hi hai 🤷';
+  if (total < 5000) return 'Oye hoye! Paisa paani wangoo 🌊';
+  if (total < 10000) return 'Bhaji, sambhal ke! 😰';
+  if (total < 25000) return 'Bappu nu naa dasseen 💀';
+  return 'TUSSI BARBAAD HO GAYE 🔥';
 }
 
 String _getEmptyStateMsg() {
   final msgs = [
-    'Zero spending? Sus. 🤨',
-    'Your wallet is suspiciously fat 🧐',
-    'No expenses? Are you even alive? 🫠',
-    'Nothing here. Bhawuk is being responsible?! 😱',
+    'Koi kharcha nahi? Sach much? 🤨',
+    'Wallet mota hai aaj... sus 🧐',
+    'Bilkul kharcha nahi? Tusi theek ho? 🫠',
+    'Bhawuk ne kuch nahi udaaya?! Kamal ho gya 😱',
+    'Paise bach rahe? Miracle ho gya 🙏',
   ];
   return msgs[Random().nextInt(msgs.length)];
 }
@@ -78,8 +79,24 @@ class DashboardScreen extends HookConsumerWidget {
             e.date.year == now.year && e.date.month == now.month
           ).toList();
 
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
+          return RefreshIndicator(
+            color: const Color(0xFFFF6B35),
+            backgroundColor: const Color(0xFF1A1A24),
+            onRefresh: () async {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Ruk paaji, taaza data la rahe 🔄', style: GoogleFonts.poppins(fontSize: 13)),
+                  backgroundColor: const Color(0xFF1A1A24),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
+              await ref.read(expenseRepositoryProvider).nuclearSync();
+              ref.invalidate(expenseStreamProvider);
+            },
+            child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
             slivers: [
               // ─── App Bar ────────────────────────────────────────────
               SliverAppBar(
@@ -125,7 +142,7 @@ class DashboardScreen extends HookConsumerWidget {
                           ),
                         ),
                         Text(
-                          'paisa udaao, track karo 💅',
+                          'paise da hisaab, Bhawuk da style 🔥',
                           style: GoogleFonts.poppins(
                             fontSize: 9,
                             color: Colors.white.withValues(alpha: 0.3),
@@ -139,16 +156,18 @@ class DashboardScreen extends HookConsumerWidget {
                 actions: [
                   _GlowButton(
                     icon: Icons.sync_rounded,
-                    onTap: () {
-                      ref.read(expenseRepositoryProvider).syncOfflineExpenses();
+                    onTap: () async {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Syncing... hold tight 🔄', style: GoogleFonts.poppins()),
+                          content: Text('Theher ja paaji, data sync ho rha 🔄', style: GoogleFonts.poppins()),
                           backgroundColor: const Color(0xFF1A1A24),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          duration: const Duration(seconds: 1),
                         ),
                       );
+                      await ref.read(expenseRepositoryProvider).nuclearSync();
+                      ref.invalidate(expenseStreamProvider);
                     },
                   ),
                   _GlowButton(
@@ -179,12 +198,12 @@ class DashboardScreen extends HookConsumerWidget {
                       _DamageReportCard(monthExpenses: monthExpenses),
                       const SizedBox(height: 24),
                       // Insights
-                      _SectionHeader(label: 'Where did the money go? 🕵️'),
+                      _SectionHeader(label: 'Paise kithe gaye? 🕵️'),
                       const SizedBox(height: 12),
                       _InsightsRow(monthExpenses: monthExpenses),
                       const SizedBox(height: 24),
                       // Transactions
-                      _SectionHeader(label: 'The Evidence 📝'),
+                      _SectionHeader(label: 'Saboot dekh le 📝'),
                       const SizedBox(height: 12),
                     ],
                   ),
@@ -209,7 +228,7 @@ class DashboardScreen extends HookConsumerWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          'Tap + to confess a purchase',
+                          'Tap + karke kharcha daal paaji',
                           style: GoogleFonts.poppins(
                             color: Colors.white.withValues(alpha: 0.15),
                             fontSize: 12,
@@ -241,7 +260,7 @@ class DashboardScreen extends HookConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 48),
                   child: Center(
                     child: Text(
-                      'crafted with ☕ & questionable life choices\nby Bhawuk',
+                      'banaaya with ☕ & galat decisions\nby Bhawuk 🫡',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                         fontSize: 11,
@@ -253,6 +272,7 @@ class DashboardScreen extends HookConsumerWidget {
                 ),
               ),
             ],
+          ),  // closes RefreshIndicator
           );
         },
         loading: () => Center(
@@ -271,7 +291,7 @@ class DashboardScreen extends HookConsumerWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Counting Bhawuk\'s sins...',
+                'Bhawuk de gunaah gin rahe haan...',
                 style: GoogleFonts.poppins(
                   color: Colors.white.withValues(alpha: 0.3),
                   fontSize: 13,
@@ -290,7 +310,7 @@ class DashboardScreen extends HookConsumerWidget {
                 const Text('💀', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 16),
                 Text(
-                  'Oops. Something broke.',
+                  'Oye, kuch tut gaya!',
                   style: GoogleFonts.poppins(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
@@ -317,7 +337,7 @@ class DashboardScreen extends HookConsumerWidget {
         elevation: 8,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: Text(
-          'Udaao 💸',
+          'Udaao Paaji 💸',
           style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
@@ -436,7 +456,7 @@ class _DamageReportCard extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Damage Report 💥',
+            'Nuqsaan Report 💥',
             style: GoogleFonts.poppins(
               color: Colors.white.withValues(alpha: 0.4),
               fontSize: 12,
@@ -458,7 +478,7 @@ class _DamageReportCard extends StatelessWidget {
             children: [
               _FunChip(
                 emoji: '🧾',
-                label: '${monthExpenses.length} guilty purchases',
+                label: '${monthExpenses.length} gunaahe',
                 color: const Color(0xFFFFD166),
               ),
               const SizedBox(width: 8),
@@ -593,7 +613,7 @@ class _InsightsRow extends StatelessWidget {
       children: [
         Expanded(
           child: _InsightCard(
-            title: 'Blame Chart 🥧',
+            title: 'Kiski galti? 🥧',
             child: Center(
               child: SizedBox(
                 height: 80,
@@ -611,7 +631,7 @@ class _InsightsRow extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _InsightCard(
-            title: 'Burn Rate 📊',
+            title: 'Udaan Report 📊',
             child: SizedBox(
               height: 80,
               child: BarChart(
@@ -709,7 +729,7 @@ class _TransactionItem extends ConsumerWidget {
         direction: DismissDirection.endToStart,
         onDismissed: (_) {
           ref.read(expenseRepositoryProvider).deleteExpense(index, expense.remoteId);
-          final msgs = ['Poof! Gone 💨', 'Deleted. Pretend it never happened 🤫', 'Evidence destroyed 🗑️'];
+          final msgs = ['Khatam-tata-bye-bye 👋', 'Ud gaya! Samajh ja 💨', 'Saboot mitaa diye 🗑️', 'Hoya hi nahi samajh le 🤫'];
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(msgs[Random().nextInt(msgs.length)], style: GoogleFonts.poppins()),
@@ -732,7 +752,7 @@ class _TransactionItem extends ConsumerWidget {
             children: [
               const Icon(Icons.delete_rounded, color: Color(0xFFFF6B6B), size: 22),
               const SizedBox(height: 2),
-              Text('yeet', style: GoogleFonts.poppins(color: const Color(0xFFFF6B6B), fontSize: 9, fontWeight: FontWeight.w600)),
+              Text('hatao', style: GoogleFonts.poppins(color: const Color(0xFFFF6B6B), fontSize: 9, fontWeight: FontWeight.w600)),
             ],
           ),
         ),

@@ -9,11 +9,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pocket_ledger/main.dart';
 
 void main() {
-  testWidgets('PocketLedger smoke test', (WidgetTester tester) async {
+  testWidgets('BhawukKharcha smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const PocketLedgerApp());
+    await tester.pumpWidget(const BhawukKharchaApp());
 
     // Basic test to check if app starts
-    expect(find.byType(PocketLedgerApp), findsOneWidget);
+    expect(find.byType(BhawukKharchaApp), findsOneWidget);
   });
 }

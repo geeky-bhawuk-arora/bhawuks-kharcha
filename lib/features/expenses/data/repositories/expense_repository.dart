@@ -12,6 +12,9 @@ final expenseRepositoryProvider = Provider((ref) {
   return ExpenseRepository(box, supabase);
 });
 
+/// A simple signal provider: increment to trigger a refresh from Supabase.
+final refreshSignalProvider = StateProvider<int>((ref) => 0);
+
 class ExpenseRepository {
   final Box<Expense> _box;
   final sb.SupabaseClient _supabase;
@@ -19,21 +22,20 @@ class ExpenseRepository {
   ExpenseRepository(this._box, this._supabase);
 
   Stream<List<Expense>> watchExpenses() async* {
-    // 1. Emit local data immediately
+    // 1. Emit local cache immediately (instant UI)
     yield getExpenses();
 
-    // 2. Full sync from Supabase (reconcile local ↔ remote, remove stale local entries)
-    await fullSyncFromSupabase();
+    // 2. Nuclear sync: Supabase is the single source of truth
+    await nuclearSync();
     yield getExpenses();
 
-    // 3. Set up a real-time listener for changes from other devices
+    // 3. Set up real-time listener for cross-device changes
     final user = _supabase.auth.currentUser;
     if (user != null) {
-      // Create a StreamController to merge Hive + real-time events
       final controller = StreamController<List<Expense>>();
-      
-      // Listen to Supabase real-time changes
-      final channel = _supabase.channel('expenses_realtime')
+
+      // Real-time Supabase listener
+      final channel = _supabase.channel('expenses_rt_${user.id}')
         .onPostgresChanges(
           event: sb.PostgresChangeEvent.all,
           schema: 'public',
@@ -44,8 +46,7 @@ class ExpenseRepository {
             value: user.id,
           ),
           callback: (payload) async {
-            // On any remote change, do a full re-sync
-            await fullSyncFromSupabase();
+            await nuclearSync();
             if (!controller.isClosed) {
               controller.add(getExpenses());
             }
@@ -53,8 +54,8 @@ class ExpenseRepository {
         )
         .subscribe();
 
-      // Also listen to local Hive changes
-      final hiveSubscription = _box.watch().listen((_) {
+      // Also watch local Hive changes (from local writes)
+      final hiveSub = _box.watch().listen((_) {
         if (!controller.isClosed) {
           controller.add(getExpenses());
         }
@@ -62,76 +63,99 @@ class ExpenseRepository {
 
       yield* controller.stream;
 
-      // Cleanup
-      hiveSubscription.cancel();
+      hiveSub.cancel();
       controller.close();
       _supabase.removeChannel(channel);
     } else {
-      // Fallback: just watch Hive if no user
       await for (final _ in _box.watch()) {
         yield getExpenses();
       }
     }
   }
 
-  /// Full reconciliation: pull all remote records, update local, and remove
-  /// any local entries that no longer exist on the server (deleted from another device).
-  Future<void> fullSyncFromSupabase() async {
+  /// Nuclear sync: wipe local Hive and replace with exactly what's in Supabase.
+  /// Preserves any unsynced local entries (offline-first).
+  Future<void> nuclearSync() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
     try {
-      // 1. Push unsynced local entries first
-      await syncOfflineExpenses();
+      // 1. Push any unsynced local entries to Supabase first
+      await _pushUnsyncedEntries();
 
-      // 2. Fetch all remote records
+      // 2. Fetch ALL remote records (this is the single source of truth)
       final List<dynamic> data = await _supabase
           .from('expenses')
           .select()
           .eq('user_id', user.id);
 
-      // Build a set of remote IDs
-      final remoteIds = <String>{};
+      // 3. Build the authoritative set from Supabase
+      final remoteExpenses = <String, Expense>{};
       for (var item in data) {
-        remoteIds.add(item['id'] as String);
-      }
-
-      // 3. Update or insert remote records into Hive
-      for (var item in data) {
-        final remoteId = item['id'] as String;
-        final existingIndex = _box.values.toList().indexWhere((e) => e.remoteId == remoteId);
-
-        final expense = Expense(
-          remoteId: remoteId,
+        final id = item['id'] as String;
+        remoteExpenses[id] = Expense(
+          remoteId: id,
           amount: (item['amount'] as num).toDouble(),
-          category: item['category'],
+          category: item['category'] ?? '',
           place: item['place'] ?? 'Unknown',
           date: DateTime.parse(item['date']),
           notes: item['notes'] ?? '',
           userId: item['user_id'],
           synced: true,
         );
+      }
 
-        if (existingIndex != -1) {
-          await _box.putAt(existingIndex, expense);
-        } else {
-          await _box.add(expense);
+      // 4. Collect unsynced local entries (these haven't reached Supabase yet)
+      final unsyncedLocal = <Expense>[];
+      for (final entry in _box.values) {
+        if (!entry.synced && !remoteExpenses.containsKey(entry.remoteId)) {
+          unsyncedLocal.add(Expense(
+            remoteId: entry.remoteId,
+            amount: entry.amount,
+            category: entry.category,
+            place: entry.place,
+            date: entry.date,
+            notes: entry.notes,
+            userId: entry.userId,
+            synced: false,
+          ));
         }
       }
 
-      // 4. Remove local entries that don't exist on the server anymore
-      //    This is the KEY fix for multi-device sync!
-      final localEntries = _box.values.toList();
-      for (int i = localEntries.length - 1; i >= 0; i--) {
-        final localEntry = localEntries[i];
-        // Only remove synced entries that are missing from remote
-        // Keep unsynced entries (they haven't been pushed yet)
-        if (localEntry.synced && !remoteIds.contains(localEntry.remoteId)) {
-          await _box.deleteAt(i);
-        }
+      // 5. NUKE local Hive and rebuild from Supabase
+      await _box.clear();
+
+      // 6. Add all remote records
+      for (final expense in remoteExpenses.values) {
+        await _box.add(expense);
+      }
+
+      // 7. Re-add any unsynced local entries
+      for (final expense in unsyncedLocal) {
+        await _box.add(expense);
       }
     } catch (e) {
-      print('PocketLedger Sync Error: $e');
+      print('Sync Error: $e');
+    }
+  }
+
+  /// Push unsynced entries to Supabase (offline-first catch-up)
+  Future<void> _pushUnsyncedEntries() async {
+    final unsynced = _box.values.where((e) => !e.synced).toList();
+    for (final expense in unsynced) {
+      try {
+        await _supabase.from('expenses').upsert({
+          'id': expense.remoteId,
+          'user_id': expense.userId,
+          'amount': expense.amount,
+          'category': expense.category,
+          'place': expense.place,
+          'date': expense.date.toIso8601String(),
+          'notes': expense.notes,
+        });
+        expense.synced = true;
+        await expense.save();
+      } catch (_) {}
     }
   }
 
@@ -174,11 +198,10 @@ class ExpenseRepository {
         'date': date.toIso8601String(),
         'notes': notes,
       });
-
       expense.synced = true;
       await expense.save();
     } catch (e) {
-      // Will be synced later via syncOfflineExpenses
+      // Will be pushed on next nuclearSync
     }
   }
 
@@ -200,7 +223,6 @@ class ExpenseRepository {
     expense.date = date;
     expense.notes = notes;
     expense.synced = false;
-
     await expense.save();
 
     try {
@@ -211,7 +233,6 @@ class ExpenseRepository {
         'date': date.toIso8601String(),
         'notes': notes,
       }).match({'id': remoteId});
-
       expense.synced = true;
       await expense.save();
     } catch (e) {}
@@ -224,22 +245,8 @@ class ExpenseRepository {
     } catch (_) {}
   }
 
+  /// Public sync method — called from the sync button
   Future<void> syncOfflineExpenses() async {
-    final unsynced = _box.values.where((e) => !e.synced).toList();
-    for (final expense in unsynced) {
-      try {
-        await _supabase.from('expenses').upsert({
-          'id': expense.remoteId,
-          'user_id': expense.userId,
-          'amount': expense.amount,
-          'category': expense.category,
-          'place': expense.place,
-          'date': expense.date.toIso8601String(),
-          'notes': expense.notes,
-        });
-        expense.synced = true;
-        await expense.save();
-      } catch (_) {}
-    }
+    await nuclearSync();
   }
 }

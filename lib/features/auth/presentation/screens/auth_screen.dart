@@ -14,7 +14,7 @@ class AuthScreen extends HookConsumerWidget {
     final authState = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121218),
+      backgroundColor: const Color(0xFF0F0F14),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -24,49 +24,59 @@ class AuthScreen extends HookConsumerWidget {
             children: [
               // Logo
               Container(
-                width: 56,
-                height: 56,
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF6C63FF), Color(0xFF9C8FFF)],
+                    colors: [Color(0xFFFF6B35), Color(0xFFFFD166)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF6B35).withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.account_balance_wallet_rounded, color: Colors.white, size: 28),
+                child: const Center(
+                  child: Text('🔥', style: TextStyle(fontSize: 28)),
+                ),
               ),
               const SizedBox(height: 32),
               Text(
-                'Welcome Back',
-                style: GoogleFonts.inter(
+                "Bhawuk's Kharcha",
+                style: GoogleFonts.poppins(
                   fontSize: 28,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
-                'Sign in to track your expenses',
-                style: GoogleFonts.inter(
+                'Oye! Pehle login toh kar 🔐',
+                style: GoogleFonts.poppins(
                   fontSize: 14,
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 40),
               // Email
               _AuthField(
                 controller: emailController,
-                label: 'Email',
-                hint: 'you@example.com',
+                label: 'Email daal 📧',
+                hint: 'tera@email.com',
                 icon: Icons.email_rounded,
               ),
               const SizedBox(height: 16),
               // Password
               _AuthField(
                 controller: passwordController,
-                label: 'Password',
+                label: 'Password daal 🔑',
                 hint: '••••••••',
                 icon: Icons.lock_rounded,
                 isPassword: true,
@@ -76,18 +86,18 @@ class AuthScreen extends HookConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF6B6B).withOpacity(0.1),
+                    color: const Color(0xFFFF6B6B).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFFF6B6B).withOpacity(0.2)),
+                    border: Border.all(color: const Color(0xFFFF6B6B).withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.error_outline_rounded, color: Color(0xFFFF6B6B), size: 18),
+                      const Text('😬', style: TextStyle(fontSize: 18)),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          authState.error!,
-                          style: GoogleFonts.inter(color: const Color(0xFFFF6B6B), fontSize: 12),
+                          'Oye kuch galat ho gya: ${authState.error!}',
+                          style: GoogleFonts.poppins(color: const Color(0xFFFF6B6B), fontSize: 12),
                         ),
                       ),
                     ],
@@ -98,7 +108,7 @@ class AuthScreen extends HookConsumerWidget {
               // Sign In Button
               SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 54,
                 child: ElevatedButton(
                   onPressed: authState.isLoading
                       ? null
@@ -107,11 +117,12 @@ class AuthScreen extends HookConsumerWidget {
                             passwordController.text.trim(),
                           ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6C63FF),
+                    backgroundColor: const Color(0xFFFF6B35),
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFF6C63FF).withOpacity(0.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 0,
+                    disabledBackgroundColor: const Color(0xFFFF6B35).withValues(alpha: 0.5),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 4,
+                    shadowColor: const Color(0xFFFF6B35).withValues(alpha: 0.3),
                   ),
                   child: authState.isLoading
                       ? const SizedBox(
@@ -123,18 +134,19 @@ class AuthScreen extends HookConsumerWidget {
                           ),
                         )
                       : Text(
-                          'Sign In',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
+                          'Chalo Andar! 🚀',
+                          style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16),
                         ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 40),
               Center(
                 child: Text(
-                  'Made with ❤️ by Bhawuk',
-                  style: GoogleFonts.inter(
+                  'jugaad by Bhawuk 🫡',
+                  style: GoogleFonts.poppins(
                     fontSize: 11,
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.12),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -168,8 +180,8 @@ class _AuthField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            color: Colors.white.withOpacity(0.5),
+          style: GoogleFonts.poppins(
+            color: Colors.white.withValues(alpha: 0.5),
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -178,22 +190,22 @@ class _AuthField extends StatelessWidget {
         TextField(
           controller: controller,
           obscureText: isPassword,
-          style: GoogleFonts.inter(color: Colors.white, fontSize: 14),
-          cursorColor: const Color(0xFF6C63FF),
+          style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+          cursorColor: const Color(0xFFFF6B35),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.inter(color: Colors.white.withOpacity(0.15)),
-            prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.2), size: 18),
+            hintStyle: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.15)),
+            prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.2), size: 18),
             filled: true,
-            fillColor: const Color(0xFF1C1C26),
+            fillColor: const Color(0xFF1A1A24),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.06)),
+              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFF6C63FF), width: 1.5),
+              borderSide: const BorderSide(color: Color(0xFFFF6B35), width: 1.5),
             ),
           ),
         ),
